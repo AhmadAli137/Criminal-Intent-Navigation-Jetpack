@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph.xml"
+    app:startDestination="@id/crimeList_dest">
+
+    <fragment
+        android:id="@+id/crimeList_dest"
+        android:name="com.riis.criminalintent2.CrimeListFragment"
+        android:label="CrimeListFragment">
+
+        <action
+            android:id="@+id/moveToDetailView"
+            app:destination="@id/crimeDetail_dest" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/crimeDetail_dest"
+        android:name="com.riis.criminalintent2.CrimeFragment"
+        android:label="CrimeFragment" >
+
+        <argument
+            android:name="crimeId"
+            app:argType="string"
+            android:defaultValue="default" />
+    </fragment>
+
+</navigation>
