@@ -2,9 +2,7 @@ package com.riis.criminalintent2
 
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -27,6 +25,15 @@ class CrimeListFragment : Fragment() {
 
     private val crimeListViewModel: CrimeListViewModel by lazy { //associating the fragment with the ViewModel CrimeListViewModel.kt
         ViewModelProvider(this).get(CrimeListViewModel::class.java)
+    }
+
+    //INITIAL CREATION OF FRAGMENT
+    //----------------------------
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true) //because we want this fragment to be able to add its own menu options to
+        // ... to the app bar, we need to report this to the host activity so that
+        // ... we can override its onCreateOptionsMenu() function
     }
 
 
@@ -69,6 +76,13 @@ class CrimeListFragment : Fragment() {
                     updateUI(crimes) //updates UI with the new crimes data
                 }
             })
+    }
+
+    //CREATING THE OPTIONS MENU
+    //---------------------------------------------------------------------------
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater) //takes in a menu resource id and an inflater
+        inflater.inflate(R.menu.fragment_crime_list, menu) //inflating the menu defined by fragment_crime_list.xml
     }
 
     //UPDATING UI WHEN UI DATA CHANGES
@@ -114,7 +128,10 @@ class CrimeListFragment : Fragment() {
             //if a crime is solved, display the ImageView (image of handcuffs)
         }
 
+        //itemView Listener
         override fun onClick(v: View) {
+            //sends the selected itemView's crime id to the fragment destination CrimeFragment.kt as a
+            // ... string (since navigation jetpack currently can't send UUID objects as arguments)
             val action = CrimeListFragmentDirections.moveToDetailView(crimeId=crime.id.toString())
             v.findNavController().navigate(action)
 

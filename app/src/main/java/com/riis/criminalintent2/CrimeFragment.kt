@@ -10,18 +10,20 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.Observer
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-
+import java.text.SimpleDateFormat
 import java.util.*
 
+
+
 private const val TAG = "CrimeFragment"
-private const val ARG_DATE = "date"
+private const val REQUEST_DATE = 0
 
 //CrimeFragment is a fragment which controls the detail view when hosted by MainActivity
 //It is also the controller that interacts with the Crime model objects and the view objects
@@ -38,14 +40,21 @@ class CrimeFragment : Fragment() {
         ViewModelProvider(this).get(CrimeDetailViewModel::class.java)
     }
 
-    private val safeArgs: CrimeFragmentArgs by navArgs()
+    //------------------------------------------NAVIGATION NOTE-----------------------------------------------------------------
+    //Due to the safe-args gradle plugin, a new class is automatically generated (FragmentNameArgs) for any fragment destination
+    // ... that specifies in the navigation graph XML code that it wants to take in a certain variable as an argument. These
+    // ... variables are then stored as class properties and includes getter and setter functions for them.
+    // This allows for the type-safe access to the variables stored in the arguments
+    //--------------------------------------------------------------------------------------------------------------------------
+
+    private val safeArgs: CrimeFragmentArgs by navArgs() //gaining type-safe access to the arguments sent to CrimeFragment.kt
 
     //WHAT HAPPENS WHEN THE FRAGMENT CrimeFragment IS CREATED
     override fun onCreate(savedInstanceState: Bundle?) { //passes information saved in the bundle or null if empty
         super.onCreate(savedInstanceState) //creates the fragment using the info passed to savedInstanceState
         crime = Crime() //an empty crime object is created from the Crime.kt class
 
-        val crimeId: UUID = UUID.fromString(safeArgs.crimeId) //retrieving the crimeId from the fragment's arguments bundle
+        val crimeId: UUID = UUID.fromString(safeArgs.crimeId) //retrieving the crimeId from the fragment's (safeArg) arguments
         crimeDetailViewModel.loadCrime(crimeId) //load the retrieved crimeId into the viewModel to send a query for the corresponding Crime object in the database
 
     }
@@ -79,6 +88,48 @@ class CrimeFragment : Fragment() {
                     updateUI()
                 }
             })
+
+
+        // getting the back stack entry of the current navigation destination
+        //-------------------------------------------------------------------
+        val navBackStackEntry = findNavController().getBackStackEntry(R.id.crimeDetail_dest)
+
+        // Creating and scoping an observer to the lifecycle of CrimeFragment
+        //--------------------------------------------------------------------
+
+        // NOTE: Because CrimeFragment is still visible on screen when dialogs appear,
+        // ... it remains in "STARTED" mode even though it is not the current destination.
+        // This results in CrimeFragment acting on received LiveData from dialogs before
+        // ... the dialog is even closed and CrimeFragment becomes the current destination again.
+        // As such, we must check to see if CrimeFragment is in "ON_RESUME" mode before allowing
+        // ... it to act on received LiveData
+
+        val observer = LifecycleEventObserver { _, event ->
+            //If CrimeFragment is in "ON_RESUME" mode and contains an argument with key "resultDate" in its bundle...
+            if (event == Lifecycle.Event.ON_RESUME
+                && navBackStackEntry.savedStateHandle.contains("resultDate")) {
+                val resultDate = navBackStackEntry.savedStateHandle.get<String>("resultDate") //grab the value of the key-value pair from bundle
+
+                // Updating the crime date with new date provided by DatePickerDialog
+                //-------------------------------------------------------------------
+                val dateFormatter = SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy", Locale.getDefault())
+                crime.date = dateFormatter.parse(resultDate as String) as Date
+                updateUI()
+            }
+        }
+
+        //Adding the Observer to the NavBackStackEntry's lifecycle
+        //--------------------------------------------------------
+        navBackStackEntry.lifecycle.addObserver(observer)
+
+        //When the fragment's view lifecycle is destroyed, remove the observer from the NavBackStackEntry's lifecycle
+        //-----------------------------------------------------------------------------------------------------------
+        viewLifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_DESTROY) {
+                navBackStackEntry.lifecycle.removeObserver(observer)
+            }
+        })
+
     }
 
 
@@ -119,20 +170,12 @@ class CrimeFragment : Fragment() {
 
         //dateButton Listener
         dateButton.setOnClickListener {
-/*          val args = Bundle().apply {
-                putSerializable(ARG_DATE, crime.date)
-            }
-            Log.i(TAG,crime.date.toString())
+            //sends the current crime date to the dialog destination DatePickerFragment.kt as a
+            // ... Long number (since navigation jetpack currently can't send Date objects as arguments)
 
-            this@CrimeFragment.findNavController().navigate(R.id.showDatePickerDialog, args)*/
-
-
-            //val action = CrimeFragmentDirections.showDatePickerDialog(date=crime.date.time.toString())
             val action = CrimeFragmentDirections.showDatePickerDialog(date=crime.date.time)
-            Log.i(TAG,crime.date.time.toString())
             this.findNavController().navigate(action)
             }
-
     }
 
     //WHEN THE CRIME OBJECT HAS BEEN UPDATED, UPDATE THE UI VIEWS
