@@ -127,7 +127,9 @@ class CrimeFragment : Fragment() {
             this@CrimeFragment.findNavController().navigate(R.id.showDatePickerDialog, args)*/
 
 
-            val action = CrimeFragmentDirections.showDatePickerDialog(date=crime.date.toString())
+            //val action = CrimeFragmentDirections.showDatePickerDialog(date=crime.date.time.toString())
+            val action = CrimeFragmentDirections.showDatePickerDialog(date=crime.date.time)
+            Log.i(TAG,crime.date.time.toString())
             this.findNavController().navigate(action)
             }
 
@@ -151,3 +153,5 @@ class CrimeFragment : Fragment() {
     }
 
 }
+
+

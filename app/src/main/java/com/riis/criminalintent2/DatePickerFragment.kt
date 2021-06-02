@@ -20,11 +20,9 @@ class DatePickerFragment : DialogFragment() {
     //---------------------
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
 
-
-        val date = safeArgs.date
-        val crimeDate: Date = Date.valueOf(date)
-
-
+        val date = Date(safeArgs.date)
+        val crimeDate: Date = Date.valueOf(date.toString())
+        
         val calendar = Calendar.getInstance() //returns a Calendar object with the default (current) date
         calendar.time = crimeDate //the Calendar object is now set to the crime date from the bundle stored in the fragment's arguments
         val initialYear = calendar.get(Calendar.YEAR)
