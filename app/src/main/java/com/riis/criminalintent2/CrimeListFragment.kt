@@ -115,8 +115,8 @@ class CrimeListFragment : Fragment() {
         }
 
         override fun onClick(v: View) {
-            val directions = CrimeListFragmentDirections.moveToDetailView(crimeId=crime.id.toString())
-            v.findNavController().navigate(directions)
+            val action = CrimeListFragmentDirections.moveToDetailView(crimeId=crime.id.toString())
+            v.findNavController().navigate(action)
 
         }
 

@@ -10,14 +10,18 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.Observer
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+
 import java.util.*
 
 private const val TAG = "CrimeFragment"
-private const val ARG_CRIME_ID = "crime_id"
+private const val ARG_DATE = "date"
 
 //CrimeFragment is a fragment which controls the detail view when hosted by MainActivity
 //It is also the controller that interacts with the Crime model objects and the view objects
@@ -61,10 +65,6 @@ class CrimeFragment : Fragment() {
         dateButton = view.findViewById(R.id.crime_date) as Button
         solvedCheckBox = view.findViewById(R.id.crime_solved) as CheckBox
 
-        dateButton.apply {
-            text = crime.date.toString()//sets the button text to the crime object's date attribute
-            isEnabled = false//disables the button, it will not respond to being pressed
-        }
         return view
     }
 
@@ -116,6 +116,21 @@ class CrimeFragment : Fragment() {
                 crime.isSolved = isChecked //sets isSolved attribute of the crime object to the boolean isChecked (T/F)
             }
         }
+
+        //dateButton Listener
+        dateButton.setOnClickListener {
+/*          val args = Bundle().apply {
+                putSerializable(ARG_DATE, crime.date)
+            }
+            Log.i(TAG,crime.date.toString())
+
+            this@CrimeFragment.findNavController().navigate(R.id.showDatePickerDialog, args)*/
+
+
+            val action = CrimeFragmentDirections.showDatePickerDialog(date=crime.date.toString())
+            this.findNavController().navigate(action)
+            }
+
     }
 
     //WHEN THE CRIME OBJECT HAS BEEN UPDATED, UPDATE THE UI VIEWS
@@ -134,22 +149,5 @@ class CrimeFragment : Fragment() {
         super.onStop()
         crimeDetailViewModel.saveCrime(crime) //saves the data of the current Crime object being accessed by the user before stopping the fragment
     }
-
-
-
-    //FUNCTION THAT ACTIVITIES CAN CALL TO GET AN INSTANCE OF THE FRAGMENT
-    //--------------------------------------------------------------------
-    companion object {
-        fun newInstance(crimeId: UUID): CrimeFragment { //a crimeId is given to a new instance of the CrimeFragment
-            val args = Bundle().apply {
-                putSerializable(ARG_CRIME_ID, crimeId) //the crimeId along with a string is saved to the fragment's arguments bundle as an argument (key-value pair)
-            }
-            return CrimeFragment().apply { //attaching the arguments bundle to the fragment
-                arguments = args
-            }
-        }
-    }
-
-
 
 }
