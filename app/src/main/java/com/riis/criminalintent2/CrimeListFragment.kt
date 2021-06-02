@@ -7,7 +7,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.onNavDestinationSelected
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
@@ -84,6 +87,23 @@ class CrimeListFragment : Fragment() {
         super.onCreateOptionsMenu(menu, inflater) //takes in a menu resource id and an inflater
         inflater.inflate(R.menu.fragment_crime_list, menu) //inflating the menu defined by fragment_crime_list.xml
     }
+
+    //WHEN AN ITEM IS SELECTED FROM THE OPTIONS MENU
+    //==============================================
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            //when the new_crime menu item is selected...
+            R.id.new_crime -> {
+                val crime = Crime() //creating a new Crime object
+                crimeListViewModel.addCrime(crime) //adding the crime to the database
+                val action = CrimeListFragmentDirections.moveToDetailView(crimeId=crime.id.toString())
+                this.findNavController().navigate(action)
+                true
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
+    }
+
 
     //UPDATING UI WHEN UI DATA CHANGES
     //--------------------------------

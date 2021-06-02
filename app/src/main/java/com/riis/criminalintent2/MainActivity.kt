@@ -2,9 +2,6 @@ package com.riis.criminalintent2
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import androidx.navigation.fragment.NavHostFragment
-import java.util.*
 
 private const val TAG = "MainActivity"
 
@@ -17,5 +14,6 @@ class MainActivity : AppCompatActivity(){
         setContentView(R.layout.activity_main) //setting content to be displayed in activity_main.xml
 
     }
+
 
 }
