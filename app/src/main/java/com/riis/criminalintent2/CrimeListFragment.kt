@@ -3,7 +3,9 @@ package com.riis.criminalintent2
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -23,6 +25,9 @@ class CrimeListFragment : Fragment() {
 
     //DEFINING CLASS VARIABLES
     //------------------------
+    private lateinit var emptyScreenPromptLayout: LinearLayout
+    private lateinit var emptyScreenNewCrimeButton: Button
+
     private lateinit var crimeRecyclerView: RecyclerView
     private var adapter: CrimeAdapter? = CrimeAdapter(emptyList())
 
@@ -49,16 +54,25 @@ class CrimeListFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_crime_list, container, false) //inflating the view layout
 
-        //referencing the RecyclerView from the layout fragment_crime_list.xml using its View ID
-        crimeRecyclerView = view.findViewById(R.id.crime_recycler_view) as RecyclerView
+        //referencing Views from the layout fragment_crime_list.xml using their resource IDs
+        crimeRecyclerView = view.findViewById(R.id.crime_recycler_view)
+        emptyScreenNewCrimeButton = view.findViewById(R.id.empty_screen_new_crime_button)
+        emptyScreenPromptLayout = view.findViewById(R.id.empty_screen_prompt_layout)
+
+        //If user clicks on the "report new crime" button (if it's visible), create a new crime object and send user to CrimeFragment.kt
+        emptyScreenNewCrimeButton.setOnClickListener {
+            val crime = Crime() //creating a new Crime object
+            crimeListViewModel.addCrime(crime) //adding the crime to the database
+            val action = CrimeListFragmentDirections.moveToDetailView(crimeId=crime.id.toString()) //navigating to a new instance of CrimeFragment, passing in the new crime id
+            this.findNavController().navigate(action)
+
+        }
 
         //giving the RecyclerView a LayoutManager which is required to make it work
         //LinearLayoutManager positions the items in its list vertically on the screen
         crimeRecyclerView.layoutManager = LinearLayoutManager(context)
 
         crimeRecyclerView.adapter = adapter
-
-        Log.i(TAG,"creating view")
 
         return view
 
@@ -113,6 +127,10 @@ class CrimeListFragment : Fragment() {
                                        //...the correct model layer data when asked by the RecyclerView
 
         crimeRecyclerView.adapter = adapter //Connecting the RecyclerView to the adapter
+
+        //If the crimes list is empty, show the LinearLayout (includes a couple textViews and Button)
+        // ... that prompts the user to report a new crime
+        emptyScreenPromptLayout.visibility = if (crimes.isNotEmpty()) View.GONE else View.VISIBLE
     }
 
     //CREATING AND IMPLEMENTING A ViewHolder TO WRAP THE ITEM VIEWS FOR A RecyclerView
