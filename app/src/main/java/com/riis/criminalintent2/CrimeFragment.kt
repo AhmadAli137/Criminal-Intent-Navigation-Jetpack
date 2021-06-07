@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.provider.ContactsContract
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,7 +20,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import java.text.SimpleDateFormat
@@ -35,9 +33,8 @@ import java.util.*
 
 
 private const val TAG = "CrimeFragment"
-private const val REQUEST_DATE = 0
-private const val REQUEST_CONTACT = 1
-private const val DATE_FORMAT = "EEE, MMM, dd"
+private const val REPORT_DATE_FORMAT = "EE, MMM dd"
+private const val REPORT_TIME_FORMAT = "h:mm a"
 
 //CrimeFragment is a fragment which controls the detail view when hosted by MainActivity
 //It is also the controller that interacts with the Crime model objects and the view objects
@@ -47,6 +44,7 @@ class CrimeFragment : Fragment() {
     private lateinit var crime: Crime
     private lateinit var titleField: EditText
     private lateinit var dateButton: Button
+    private lateinit var timeButton: Button
     private lateinit var solvedCheckBox: CheckBox
     private lateinit var reportButton: Button
     private lateinit var suspectButton: Button
@@ -85,10 +83,10 @@ class CrimeFragment : Fragment() {
 
            A Contract:
            --> defines an intent which will start an activity
-           --> Receive the result intent from the started activity and parses it.
+           --> Receives the result intent from the started activity and parses it.
 
            We will be using ActivityResultContract<Uri, Uri?> to create a generic contract that starts a new activity,
-           ... allows the user to pick an item from the activity's data, and return what was selected.
+           ... allow the user to pick an item from the activity's data, and return what was selected.
 
            The input is the URI containing a directory of data from which to pick an item. The output (can be null) is the
            ... URI of the item that was picked. A URI (Uniform resource identifier) is used to identify a resource */
@@ -108,7 +106,7 @@ class CrimeFragment : Fragment() {
         }
 
         //ActivityResultCallback is A type-safe callback to be called when an activity result is available, it handles
-        // ...what happens with the result after. In this case, the result is a Uri from the activity
+        // ...what happens with the result after. In this case, the result is a Uri (can be Null) from the activity
 
         //creating a callback to handle the result of a pick contract
         pickContactCallback = ActivityResultCallback<Uri?> { contactUri: Uri? ->
@@ -136,7 +134,7 @@ class CrimeFragment : Fragment() {
         // This step also registers the fragment with the ActivityManager as the listener
         pickContactLauncher = registerForActivityResult(pickContactContract, pickContactCallback)
 
-        //Before launching the intent to get the contacts data, we should as the user for permission
+        //Before launching the intent to get the contacts data, we should ask the user for permission
         // ... which is a whole other intent and already exists in the Activity Results APIs
 
         //Creating a launcher to handle the request for permissions and the result. If permission is granted,
@@ -161,9 +159,10 @@ class CrimeFragment : Fragment() {
         //The third parameter tells the layout inflater whether to immediately add the inflated view to the view’s parent
         val view = inflater.inflate(R.layout.fragment_crime, container, false)
 
-        //referencing views from fragment_crime.xml using their View IDs
+        //referencing views from fragment_crime.xml using their resource IDs
         titleField = view.findViewById(R.id.crime_title) as EditText
         dateButton = view.findViewById(R.id.crime_date) as Button
+        timeButton = view.findViewById(R.id.crime_time) as Button
         solvedCheckBox = view.findViewById(R.id.crime_solved) as CheckBox
         reportButton = view.findViewById(R.id.crime_report) as Button
         suspectButton = view.findViewById(R.id.crime_suspect) as Button
@@ -176,7 +175,7 @@ class CrimeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         crimeDetailViewModel.crimeLiveData.observe(
             viewLifecycleOwner,
-            Observer { crime ->
+            { crime ->
                 crime?.let {
                     this.crime = crime
                     updateUI()
@@ -202,12 +201,9 @@ class CrimeFragment : Fragment() {
             //If CrimeFragment is in "ON_RESUME" mode and contains an argument with key "resultDate" in its bundle...
             if (event == Lifecycle.Event.ON_RESUME
                 && navBackStackEntry.savedStateHandle.contains("resultDate")) {
-                val resultDate = navBackStackEntry.savedStateHandle.get<String>("resultDate") //grab the value of the key-value pair from bundle
+                val resultDate = navBackStackEntry.savedStateHandle.get<Long>("resultDate") //grab the value of the key-value pair from bundle
 
-                // Updating the crime date with new date provided by DatePickerDialog
-                //-------------------------------------------------------------------
-                val dateFormatter = SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy", Locale.getDefault())
-                crime.date = dateFormatter.parse(resultDate as String) as Date
+                crime.date = Date(resultDate as Long)
                 updateUI()
             }
         }
@@ -225,7 +221,6 @@ class CrimeFragment : Fragment() {
         })
 
     }
-
 
     //WHAT HAPPENS WHENEVER THE APP STARTS UP
     override fun onStart() {
@@ -271,6 +266,12 @@ class CrimeFragment : Fragment() {
             this.findNavController().navigate(action)
             }
 
+        //timeButton Listener
+        timeButton.setOnClickListener {
+            val action = CrimeFragmentDirections.showTimePickerDialog(date=crime.date.time)
+            this.findNavController().navigate(action)
+        }
+
         //reportButton Listener
         reportButton.setOnClickListener {
             Intent(Intent.ACTION_SEND).apply { //creating an Intent and giving it the action to deliver data to someone else
@@ -309,7 +310,13 @@ class CrimeFragment : Fragment() {
     //WHEN THE CRIME OBJECT HAS BEEN UPDATED, UPDATE THE UI VIEWS
     private fun updateUI() {
         titleField.setText(crime.title)
-        dateButton.text = crime.date.toString()
+
+        val stringDateFormatter = SimpleDateFormat("EE, MMM dd yyyy", Locale.getDefault())
+        dateButton.text = stringDateFormatter.format(crime.date)
+
+        val stringTimeFormatter = SimpleDateFormat("h:mm a", Locale.getDefault())
+        timeButton.text = stringTimeFormatter.format(crime.date)
+
         solvedCheckBox.apply {
             isChecked = crime.isSolved
             jumpDrawablesToCurrentState() //skips the checkbox animation
@@ -322,23 +329,26 @@ class CrimeFragment : Fragment() {
         //1$s: crime title (string already known)
 
         //%2$s: crime date?
-        val dateString = DateFormat.format(DATE_FORMAT, crime.date).toString()
+        val dateString = DateFormat.format(REPORT_DATE_FORMAT, crime.date).toString()
 
-        //%3$s: crime solved?
+        //%3$s: crime time?
+        val timeString = DateFormat.format(REPORT_TIME_FORMAT, crime.date).toString()
+
+        //%4$s: crime solved?
         val solvedString = if (crime.isSolved) {
             getString(R.string.crime_report_solved)
         } else {
             getString(R.string.crime_report_unsolved)
         }
-        //%4$s: crime suspect?
-        var suspect = if (crime.suspect.isBlank()) {
+        //%5$s: crime suspect?
+        val suspect = if (crime.suspect.isBlank()) {
             getString(R.string.crime_report_no_suspect)
         } else {
             getString(R.string.crime_report_suspect, crime.suspect)
         }
-        //R.string.crime_report: "%1$s! The crime was discovered on %2$s. %3$s, and %4$s"
+        //R.string.crime_report: "%1$s! The crime was discovered on %2$s at %3$s. %4$s, and %5$s"
         return getString(R.string.crime_report,
-            crime.title, dateString, solvedString, suspect)
+            crime.title, dateString, timeString, solvedString, suspect)
     }
 
     //WHEN THE FRAGMENT HAS BEEN STOPPED

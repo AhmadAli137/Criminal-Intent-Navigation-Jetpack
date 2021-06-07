@@ -15,6 +15,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.onNavDestinationSelected
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 private const val TAG = "CrimeListFragment"
@@ -155,8 +157,9 @@ class CrimeListFragment : Fragment() {
             this.crime = crime //when a ViewHolder is given a crime to bind to, it updates its internal crime variable to become the input crime
 
             //setting the text for the child textViews of the itemView for this particular ViewHolder
+            val stringDateFormatter = SimpleDateFormat("EE, MMM dd yyyy - h:mm a", Locale.getDefault())
             titleTextView.text = this.crime.title
-            dateTextView.text = this.crime.date.toString()
+            dateTextView.text = stringDateFormatter.format(this.crime.date)
 
             solvedImageView.visibility = if (crime.isSolved) { //setting the visibility of the child ImageView of the itemView
                 View.VISIBLE                                   //...according to whether the itemView's Crime object's attribute, isSolved

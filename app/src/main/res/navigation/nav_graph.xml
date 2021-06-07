@@ -32,12 +32,27 @@
             android:id="@+id/showDatePickerDialog"
             app:destination="@id/datePicker_dest" />
 
+        <action
+            android:id="@+id/showTimePickerDialog"
+            app:destination="@id/timePicker_dest" />
+
     </fragment>
 
     <!-- ====================================================================== -->
     <dialog
         android:id="@+id/datePicker_dest"
         android:name="com.riis.criminalintent2.DatePickerFragment">
+
+        <argument
+            android:name="date"
+            app:argType="long" />
+
+    </dialog>
+
+    <!-- ====================================================================== -->
+    <dialog
+        android:id="@+id/timePicker_dest"
+        android:name="com.riis.criminalintent2.TimePickerFragment">
 
         <argument
             android:name="date"

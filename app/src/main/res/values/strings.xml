@@ -8,11 +8,15 @@
     <string name="empty_new_crime">Report New Crime</string>
     <string name="crime_suspect_text">Choose Suspect</string>
     <string name="crime_report_text">Send Crime Report</string>
+
+    <string name="crime_date_text">Choose Date</string>
+    <string name="crime_time_text">Choose Time</string>
+
     <string name="empty_screen_title">Welcome to Criminal Intent</string>
     <string name="empty_screen_description">Never let an office crime go unnoticed ever again</string>
 
     <string name="crime_report">%1$s!
-        The crime was discovered on %2$s. %3$s, and %4$s
+        The crime was discovered on %2$s at %3$s. %4$s, and %5$s
      </string>
     <string name="crime_report_solved">The case is solved</string>
     <string name="crime_report_unsolved">The case is not solved</string>
